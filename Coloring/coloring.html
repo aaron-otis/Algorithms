@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+
+<html>
+    <head lang="en">
+        <meta charset="UTF-8" />
+        <link rel="stylesheet" type="text/css" href="style.css" />
+    </head>
+    <body>
+        <br />
+        <h1>Is Your Graph Two-Colorable?</h1>
+        <br />
+        <article>
+            <p id="center" class="center">Upload edge list: <input type="file" name="upload" id="upload"/></p>
+            <p> Results:</p>
+            <p id="output"></p>
+        </article>
+        <script>
+            var colorable;
+
+            function debugProg(graph) {
+                var str = "";
+                for (v in graph) {
+                    str += "vertex " + v + " adjacentcies: ";
+                    str += graph[v].adjacentcies + " discovered? ";
+                    str += graph[v].discovered + ", color: ";
+                    str += graph[v].color + "\n";
+                }
+                alert(str);
+            };
+
+            function ExploreAndColor(graph, vertex, adjColor) {
+
+                graph[vertex].discovered = true;
+                if (adjColor == "red") // Learn proper use of ternary operator.
+                    graph[vertex].color = "blue";
+                else
+                    graph[vertex].color = "red";
+
+                for (v in graph[vertex].adjacentcies) {
+                    if (graph[graph[vertex].adjacentcies[v]].discovered) {
+                        if (graph[graph[vertex].adjacentcies[v]].color == graph[vertex].color)
+                            colorable = false;
+                    }
+                    else
+                        ExploreAndColor(graph, graph[vertex].adjacentcies[v], graph[vertex].color);
+                }
+                return colorable;
+            };
+
+            function DFS(graph) {
+                var components = 0;
+
+                for (v in graph) {
+                    if (!graph[v].discovered) {
+                        components += 1;
+                        ExploreAndColor(graph, v, "blue");
+                    }
+                }
+                return [colorable, components];
+            };
+
+            document.getElementById("upload").onchange = function() {
+                var vertices = {};
+                var file = this.files[0];
+                var reader = new FileReader();
+
+                colorable = true;
+                reader.onload = function(progressEvent) {
+                    var lines = this.result.split('\n');
+                    var edges = [];
+
+                    for (var i = 0; i < lines.length - 1; i++) {
+                        edges = lines[i].split(' ');
+                        if (!vertices.hasOwnProperty(edges[0])) {
+                            alert("added vertex " + edges[0]);
+                            vertices[edges[0]] = {};
+                            vertices[edges[0]].adjacentcies = [];
+                            vertices[edges[0]].discovered = false;
+                        }
+                        vertices[edges[0]].adjacentcies.push(edges[1]);
+                        if (!vertices.hasOwnProperty(edges[1])) {
+                            alert("added vertex " + edges[1]);
+                            vertices[edges[1]] = {};
+                            vertices[edges[1]].adjacentcies = [];
+                            vertices[edges[1]].discovered = false;
+                        }
+                        vertices[edges[1]].adjacentcies.push(edges[0]);
+                        alert("for " + edges[1] + ", added adjacentcy " + edges[0]);
+                    }
+
+                    debugProg(vertices);
+                    document.getElementById("output").innerHTML = DFS(vertices);
+                    document.getElementById("upload").value = null;
+                };
+                reader.readAsText(file);
+            };
+        </script>
+    </body>
+</html>
